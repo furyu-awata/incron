@@ -386,26 +386,26 @@ void UserTable::OnEvent(InotifyEvent& rEvt)
   syslog(LOG_INFO, "PATH (%s) FILE (%s) EVENT (%s)", pW->GetPath().c_str() , IncronTabEntry::GetSafePath(rEvt.GetName()).c_str() , events.c_str());
   //#endif
   
-  // add new watch for newly created subdirs
-  if ( rEvt.IsType(IN_ISDIR) && (rEvt.IsType(IN_CREATE) || rEvt.IsType(IN_MOVED_TO)) )
-  {
-	Dispose();
-	sleep (1);
-	Load();
-  // this is the fast way of registering new subsirs, but it 
-  // misses new sub-sub dirs if they are created too fast in a row
-  // eg by : mkdir -p /tmp/a/b/c/d/e
-  // so the reload is for now the better way to go
-  // the complete reload also happens if the incrontab file changes
-  /*
-  m_pEd->Unregister(this);
-	std::string * pECmd = new std::string(pE->GetCmd().c_str());
-	IncronTabEntry * newEntry = new IncronTabEntry(completeFile, pE->GetMask(),  *pECmd);
-	m_tab.Add(*newEntry);
-	AddTabEntry(*newEntry);
-  m_pEd->Register(this);
-  */ 
-  }
+//  // add new watch for newly created subdirs
+//  if ( rEvt.IsType(IN_ISDIR) && (rEvt.IsType(IN_CREATE) || rEvt.IsType(IN_MOVED_TO)) )
+//  {
+//	Dispose();
+//	sleep (1);
+//	Load();
+//  // this is the fast way of registering new subsirs, but it 
+//  // misses new sub-sub dirs if they are created too fast in a row
+//  // eg by : mkdir -p /tmp/a/b/c/d/e
+//  // so the reload is for now the better way to go
+//  // the complete reload also happens if the incrontab file changes
+//  /*
+//  m_pEd->Unregister(this);
+//	std::string * pECmd = new std::string(pE->GetCmd().c_str());
+//	IncronTabEntry * newEntry = new IncronTabEntry(completeFile, pE->GetMask(),  *pECmd);
+//	m_tab.Add(*newEntry);
+//	AddTabEntry(*newEntry);
+//  m_pEd->Register(this);
+//  */ 
+//  }
 
   std::string cmd;
   const std::string& cs = pE->GetCmd();
@@ -437,9 +437,9 @@ void UserTable::OnEvent(InotifyEvent& rEvt)
         }
         else if (cs[px] == '&') {     // numeric mask
           char* s;
-#pragma GCC diagnostic ignored "-Wunused-result"  
+//#pragma GCC diagnostic ignored "-Wunused-result"  
           asprintf(&s, "%u", (unsigned) rEvt.GetMask());
-#pragma GCC diagnostic warning "-Wunused-result"
+//#pragma GCC diagnostic warning "-Wunused-result"
           cmd.append(s);
           free(s);
           oldpos = pos + 2;
@@ -465,6 +465,14 @@ void UserTable::OnEvent(InotifyEvent& rEvt)
   if (pE->IsNoLoop())
     pW->SetEnabled(false);
 #endif
+
+  // add new watch for newly created subdirs
+  if ( rEvt.IsType(IN_ISDIR) && (rEvt.IsType(IN_CREATE) || rEvt.IsType(IN_DELETE) || rEvt.IsType(IN_MOVED_TO)) )
+  {
+	Dispose();
+	sleep (1);
+	Load();
+  }
 
   pid_t pid = fork();
   if (pid == 0) {
